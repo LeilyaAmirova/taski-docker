@@ -65,26 +65,22 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/taski_backend:late>
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/taski_backend:latest
 
   frontend_tests:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-
+    - uses: actions/checkout@v3
     - name: Set up nodeJS
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
-        node-version: 20
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-
-    - name: Clean cache and reinstall
+        node-version: 18
+        
+    - name: Install dependencies
       run: |
-        npm cache clean --force
         cd frontend/
-        npm ci --no-audit --prefer-offline
+        npm ci
 
     - name: Test frontend
       run: |
@@ -105,19 +101,16 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push frontend image
+      - name: Push to DockerHub
         uses: docker/build-push-action@v4
         with:
           context: ./frontend/
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/taski_frontend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/taski_frontend:${{ github.sha }}
+          tags: username/taski_frontend:latest
 
   build_gateway_and_push_to_docker_hub:
     name: Push gateway Docker image to DockerHub
   runs-on: ubuntu-latest
-  needs: tests
   steps:
     - name: Check out the repo
       uses: actions/checkout@v3
@@ -128,14 +121,12 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Build and push gateway image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./gateway/
-        push: true
-        tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/taski_gateway:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/taski_gateway:${{ github.sha }}
+    - name: Push to DockerHub
+        uses: docker/build-push-action@v4
+        with:
+          context: ./gateway/
+          push: true
+          tags: werr/taski_gateway:latest          
           
   deploy:
     runs-on: ubuntu-latest
